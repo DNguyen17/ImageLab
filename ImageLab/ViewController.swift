@@ -19,6 +19,8 @@ class ViewController: UIViewController   {
     let bridge = OpenCVBridge()
     
     //MARK: Outlets in view
+    @IBOutlet weak var cameraButton: UIButton!
+    @IBOutlet weak var button: UIButton!
     @IBOutlet weak var flashSlider: UISlider!
     @IBOutlet weak var stageLabel: UILabel!
     
@@ -48,17 +50,32 @@ class ViewController: UIViewController   {
         if !videoManager.isRunning{
             videoManager.start()
         }
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ViewController.toggleButton(_:)), name: "toggleOn", object: nil)
     
+    }
+    
+    func toggleButton(notification: NSNotification) {
+        let userInfo:Dictionary<String, AnyObject!> = notification.userInfo as! Dictionary<String,AnyObject!>
+        let toggleOn = userInfo["toggleOn"]! as! String
+        if toggleOn == "On" {
+            self.button.enabled = false
+            self.cameraButton.enabled = false
+        } else {
+            self.button.enabled = true
+            self.cameraButton.enabled = true
+        }
     }
     
     //MARK: Process image output
     func processImage(inputImage:CIImage) -> CIImage{
         
+        
         // detect faces
-        let f = getFaces(inputImage)
+        // let f = getFaces(inputImage)
         
         // if no faces, just return original image
-        if f.count == 0 { return inputImage }
+//        if f.count == 0 { return inputImage }
         
         var retImage = inputImage
         
@@ -80,7 +97,7 @@ class ViewController: UIViewController   {
         // or any bounds to only process a certain bounding region in OpenCV
         self.bridge.setTransforms(self.videoManager.transform)
         self.bridge.setImage(retImage,
-                             withBounds: f[0].bounds, // the first face bounds
+                             withBounds: retImage.extent, // the first face bounds
                              andContext: self.videoManager.getCIContext())
         
         self.bridge.processImage()
